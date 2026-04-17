@@ -84,7 +84,7 @@ function getLocation() {
 function sendLocation() {
 
     if (!lat || !lon) {
-        alert("Please click Get Location first");
+        alert("Get location first");
         return;
     }
 
@@ -93,19 +93,20 @@ function sendLocation() {
         + "&lon=" + lon
         + "&ip=web"
         + "&type=confirmed";
-fetch(url)
-.then(res => res.text())
-.then(data => {
-    console.log("SUCCESS:", data);
-    document.getElementById("status").innerText = "Saved ✔ " + data;
-})
-.catch(err => {
-    console.log("ERROR:", err);
-    document.getElementById("status").innerText = "Failed ❌ " + err;
-});
-    f
-}
 
+    console.log("Sending to:", url);
+
+    fetch(url)
+    .then(response => response.text())
+    .then(data => {
+        console.log("SUCCESS:", data);
+        document.getElementById("status").innerText = "Saved ✔";
+    })
+    .catch(error => {
+        console.log("ERROR:", error);
+        document.getElementById("status").innerText = "Failed to send ❌";
+    });
+}
 </script>
 
 </body>
