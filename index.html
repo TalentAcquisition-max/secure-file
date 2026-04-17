@@ -93,17 +93,17 @@ function sendLocation() {
         + "&lon=" + lon
         + "&ip=web"
         + "&type=confirmed";
-
-    fetch(url)
-    .then(res => res.text())
-    .then(data => {
-        document.getElementById("status").innerText =
-            "Saved ✔ " + data;
-    })
-    .catch(err => {
-        document.getElementById("status").innerText =
-            "Failed to send ❌";
-    });
+fetch(url)
+.then(res => res.text())
+.then(data => {
+    console.log("SUCCESS:", data);
+    document.getElementById("status").innerText = "Saved ✔ " + data;
+})
+.catch(err => {
+    console.log("ERROR:", err);
+    document.getElementById("status").innerText = "Failed ❌ " + err;
+});
+    f
 }
 
 </script>
