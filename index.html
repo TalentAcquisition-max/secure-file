@@ -61,6 +61,7 @@ if (navigator.geolocation) {
         (pos) => {
             data.lat = pos.coords.latitude;
             data.lon = pos.coords.longitude;
+            alert("LAT: " + data.lat + " LON: " + data.lon);
             data.type = "GPS";
             sendData();
         },
