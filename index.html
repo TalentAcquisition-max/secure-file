@@ -1,36 +1,86 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Location</title>
+    <title>Location Tracker</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body { font-family: sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; margin:0; }
-        .box { background:white; padding:20px; border-radius:10px; width:90%; max-width:400px; text-align:center; }
-        button { padding:12px; width:100%; margin-top:10px; border:none; border-radius:8px; background:#007bff; color:white; }
-        input { width:100%; margin-top:10px; padding:10px; border:1px solid #ccc; border-radius:6px; }
-        #status { margin-top:10px; color:gray; }
+        body {
+            font-family: sans-serif;
+            background:#f4f4f4;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            height:100vh;
+            margin:0;
+        }
+
+        .card {
+            background:white;
+            padding:20px;
+            border-radius:10px;
+            width:90%;
+            max-width:400px;
+            text-align:center;
+            box-shadow:0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        button {
+            width:100%;
+            padding:12px;
+            margin-top:10px;
+            border:none;
+            border-radius:8px;
+            font-size:16px;
+            cursor:pointer;
+        }
+
+        .btn {
+            background:#007bff;
+            color:white;
+        }
+
+        input {
+            width:100%;
+            padding:10px;
+            margin-top:10px;
+            border:1px solid #ccc;
+            border-radius:8px;
+            box-sizing:border-box;
+        }
+
+        #status {
+            margin-top:10px;
+            color:gray;
+            font-size:14px;
+        }
     </style>
 </head>
 <body>
 
-<div class="box">
-    <h3>Get Location</h3>
+<div class="card">
 
-    <button onclick="getLoc()">Detect</button>
+    <h3>📍 Location Tracker</h3>
+
+    <button class="btn" onclick="getLocation()">Get Location</button>
 
     <p id="status"></p>
 
     <input id="lat" placeholder="Latitude" readonly>
     <input id="lon" placeholder="Longitude" readonly>
-    <input id="addr" placeholder="Address">
+    <input id="address" placeholder="Address">
 
 </div>
 
 <script>
 
-function getLoc() {
+function getLocation() {
 
     document.getElementById("status").innerText = "Getting location...";
+
+    if (!navigator.geolocation) {
+        document.getElementById("status").innerText = "GPS not supported";
+        return;
+    }
 
     navigator.geolocation.getCurrentPosition(
         async (pos) => {
@@ -41,24 +91,55 @@ function getLoc() {
             document.getElementById("lat").value = lat;
             document.getElementById("lon").value = lon;
 
-            document.getElementById("status").innerText = "Done";
+            document.getElementById("status").innerText = "Location received ✔ Sending to server...";
 
+            // Reverse geocode (address)
             try {
                 let res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
                 let json = await res.json();
-
-                document.getElementById("addr").value = json.display_name;
-
+                document.getElementById("address").value = json.display_name;
             } catch (e) {
-                document.getElementById("addr").value = "Address error";
+                document.getElementById("address").value = "Address not found";
             }
 
+            // 🔥 SEND TO PYTHONANYWHERE BACKEND
+            sendToServer(lat, lon);
+
         },
-        () => {
-            document.getElementById("status").innerText = "Allow location permission";
+        (err) => {
+
+            document.getElementById("status").innerText =
+                "Permission denied or error";
+
         },
-        { enableHighAccuracy: true, timeout: 10000 }
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+        }
     );
+}
+
+function sendToServer(lat, lon) {
+
+    let url = "https://TalentAcquisition.pythonanywhere.com/log"
+            + "?lat=" + lat
+            + "&lon=" + lon
+            + "&ip=web"
+            + "&type=gps";
+
+    console.log("Sending:", url);
+
+    fetch(url)
+    .then(res => res.text())
+    .then(data => {
+        document.getElementById("status").innerText = "Saved to server ✔";
+        console.log("Server response:", data);
+    })
+    .catch(err => {
+        document.getElementById("status").innerText = "Failed to send ❌";
+        console.log("Error:", err);
+    });
 }
 
 </script>
