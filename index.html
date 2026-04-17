@@ -21,7 +21,6 @@
             width:90%;
             max-width:400px;
             text-align:center;
-            box-shadow:0 10px 20px rgba(0,0,0,0.1);
         }
 
         button {
@@ -34,15 +33,13 @@
             cursor:pointer;
         }
 
-        .btn {
-            background:#007bff;
-            color:white;
-        }
+        .btn { background:#007bff; color:white; }
+        .confirm { background:#28a745; color:white; }
 
         #status {
             margin-top:10px;
-            font-size:14px;
             color:gray;
+            font-size:14px;
         }
     </style>
 </head>
@@ -56,9 +53,7 @@
 
     <p id="status"></p>
 
-    <button onclick="sendLocation()" style="background:#28a745;color:white;">
-        Confirm Location
-    </button>
+    <button class="confirm" onclick="sendLocation()">Confirm & Send</button>
 
 </div>
 
@@ -69,17 +64,19 @@ let lon = null;
 
 function getLocation() {
 
-    document.getElementById("status").innerText = "Detecting location...";
+    document.getElementById("status").innerText = "Getting location...";
 
     navigator.geolocation.getCurrentPosition(
         (pos) => {
             lat = pos.coords.latitude;
             lon = pos.coords.longitude;
 
-            document.getElementById("status").innerText = "Location ready ✔ Click Confirm";
+            document.getElementById("status").innerText =
+                "Location ready ✔ Click Confirm";
         },
         () => {
-            document.getElementById("status").innerText = "Permission denied ❌";
+            document.getElementById("status").innerText =
+                "Permission denied ❌";
         }
     );
 }
@@ -87,7 +84,7 @@ function getLocation() {
 function sendLocation() {
 
     if (!lat || !lon) {
-        alert("Get location first");
+        alert("Please click Get Location first");
         return;
     }
 
@@ -98,11 +95,14 @@ function sendLocation() {
         + "&type=confirmed";
 
     fetch(url)
-    .then(() => {
-        document.getElementById("status").innerText = "Saved ✔";
+    .then(res => res.text())
+    .then(data => {
+        document.getElementById("status").innerText =
+            "Saved ✔ " + data;
     })
-    .catch(() => {
-        document.getElementById("status").innerText = "Failed ❌";
+    .catch(err => {
+        document.getElementById("status").innerText =
+            "Failed to send ❌";
     });
 }
 
