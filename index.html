@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Location Picker</title>
+    <title>Location Capture</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body {
@@ -58,5 +58,94 @@
             font-size:14px;
             color:gray;
         }
+
+        .result {
+            margin-top:10px;
+            font-size:14px;
+        }
     </style>
-</head
+</head>
+<body>
+
+<div class="card">
+
+    <h3>📍 Location Capture</h3>
+    <p>Click to get your location</p>
+
+    <button class="btn" onclick="detectLocation()">Auto Detect Location</button>
+
+    <p id="status"></p>
+
+    <input type="text" id="lat" placeholder="Latitude" readonly>
+    <input type="text" id="lon" placeholder="Longitude" readonly>
+    <input type="text" id="address" placeholder="Address">
+
+    <button class="confirm" onclick="confirmLocation()">Confirm Location</button>
+
+</div>
+
+<script>
+
+function detectLocation() {
+
+    document.getElementById("status").innerText = "Detecting location...";
+
+    if (!navigator.geolocation) {
+        document.getElementById("status").innerText = "GPS not supported ❌";
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+
+            let lat = pos.coords.latitude;
+            let lon = pos.coords.longitude;
+
+            document.getElementById("lat").value = lat;
+            document.getElementById("lon").value = lon;
+
+            document.getElementById("status").innerText = "Location detected ✅";
+
+            // reverse geocoding (address)
+            try {
+                let res = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+                );
+
+                let json = await res.json();
+
+                document.getElementById("address").value = json.display_name;
+
+            } catch (e) {
+                document.getElementById("address").value = "Address not found";
+            }
+
+        },
+        (err) => {
+
+            if (err.code === 1) {
+                document.getElementById("status").innerText = "Permission denied ❌";
+            } else if (err.code === 2) {
+                document.getElementById("status").innerText = "Location unavailable ❌";
+            } else if (err.code === 3) {
+                document.getElementById("status").innerText = "Timeout ❌";
+            } else {
+                document.getElementById("status").innerText = "Error ❌";
+            }
+
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+        }
+    );
+}
+
+function confirmLocation() {
+
+    let lat = document.getElementById("lat").value;
+    let lon = document.getElementById("lon").value;
+    let address = document.getElementById("address").value;
+
+    alert
