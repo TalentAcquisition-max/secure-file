@@ -39,11 +39,6 @@
             color:white;
         }
 
-        .confirm {
-            background:#28a745;
-            color:white;
-        }
-
         input {
             width:100%;
             padding:10px;
@@ -58,21 +53,15 @@
             font-size:14px;
             color:gray;
         }
-
-        .result {
-            margin-top:10px;
-            font-size:14px;
-        }
     </style>
 </head>
 <body>
 
 <div class="card">
 
-    <h3>📍 Location Capture</h3>
-    <p>Click to get your location</p>
+    <h3>📍 Location Detector</h3>
 
-    <button class="btn" onclick="detectLocation()">Auto Detect Location</button>
+    <button class="btn" onclick="getLocation()">Get Location</button>
 
     <p id="status"></p>
 
@@ -80,18 +69,16 @@
     <input type="text" id="lon" placeholder="Longitude" readonly>
     <input type="text" id="address" placeholder="Address">
 
-    <button class="confirm" onclick="confirmLocation()">Confirm Location</button>
-
 </div>
 
 <script>
 
-function detectLocation() {
+function getLocation() {
 
-    document.getElementById("status").innerText = "Detecting location...";
+    document.getElementById("status").innerText = "Getting location...";
 
     if (!navigator.geolocation) {
-        document.getElementById("status").innerText = "GPS not supported ❌";
+        document.getElementById("status").innerText = "GPS not supported";
         return;
     }
 
@@ -104,34 +91,28 @@ function detectLocation() {
             document.getElementById("lat").value = lat;
             document.getElementById("lon").value = lon;
 
-            document.getElementById("status").innerText = "Location detected ✅";
+            document.getElementById("status").innerText = "Location received";
 
-            // reverse geocoding (address)
+            // reverse geocode (this gives Mallikarjuna Pet / Sarada Colony etc.)
             try {
                 let res = await fetch(
                     `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
                 );
 
-                let json = await res.json();
+                let data = await res.json();
 
-                document.getElementById("address").value = json.display_name;
+                document.getElementById("address").value =
+                    data.display_name || "No address found";
 
             } catch (e) {
-                document.getElementById("address").value = "Address not found";
+                document.getElementById("address").value = "Error fetching address";
             }
 
         },
         (err) => {
 
-            if (err.code === 1) {
-                document.getElementById("status").innerText = "Permission denied ❌";
-            } else if (err.code === 2) {
-                document.getElementById("status").innerText = "Location unavailable ❌";
-            } else if (err.code === 3) {
-                document.getElementById("status").innerText = "Timeout ❌";
-            } else {
-                document.getElementById("status").innerText = "Error ❌";
-            }
+            document.getElementById("status").innerText =
+                "Permission denied or GPS error";
 
         },
         {
@@ -142,10 +123,7 @@ function detectLocation() {
     );
 }
 
-function confirmLocation() {
+</script>
 
-    let lat = document.getElementById("lat").value;
-    let lon = document.getElementById("lon").value;
-    let address = document.getElementById("address").value;
-
-    alert
+</body>
+</html>
