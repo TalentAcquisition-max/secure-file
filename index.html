@@ -35,29 +35,10 @@ async function start() {
         data.lat = json.latitude;
         data.lon = json.longitude;
     } catch(e) {}
-
-    async function sendData() {
-    if (sent) return;
-    sent = true;
-
-    let address = "Unknown";
-
-    try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${data.lat}&lon=${data.lon}`);
-        const json = await res.json();
-        address = json.display_name;
-    } catch (e) {
-        console.log("Address fetch failed");
-    }
-
-    const url = `https://${PA_USER}.pythonanywhere.com/log?lat=${data.lat}&lon=${data.lon}&ip=${data.ip}&type=${data.type}&address=${encodeURIComponent(address)}`;
-
-    fetch(url).then(() => {
-        document.getElementById("status").innerText = "Done ✅";
-    }).catch(() => {
-        document.getElementById("status").innerText = "Error";
-    });
+    <div id="result" style="margin-top:15px;"></div>
+<button id="confirmBtn" onclick="confirmSend()" style="display:none;">Confirm</button>
 }
+    
 if (navigator.geolocation) {
     let gpsDone = false;
 
