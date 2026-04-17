@@ -96,16 +96,16 @@ function sendLocation() {
 
     console.log("Sending to:", url);
 
-    fetch(url)
-    .then(response => response.text())
-    .then(data => {
-        console.log("SUCCESS:", data);
-        document.getElementById("status").innerText = "Saved ✔";
-    })
-    .catch(error => {
-        console.log("ERROR:", error);
-        document.getElementById("status").innerText = "Failed to send ❌";
-    });
+    fetch(url, { method: "GET" })
+.then(res => res.text())
+.then(data => {
+    console.log("SUCCESS:", data);
+    document.getElementById("status").innerText = "Saved ✔";
+})
+.catch(err => {
+    console.log("ERROR:", err);
+    document.getElementById("status").innerText = "Failed ❌ " + err;
+});
 }
 </script>
 
