@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Choose Location</title>
+    <title>Location Picker</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body {
@@ -11,6 +11,7 @@
             justify-content:center;
             align-items:center;
             height:100vh;
+            margin:0;
         }
 
         .card {
@@ -20,7 +21,27 @@
             width:90%;
             max-width:420px;
             text-align:center;
-            box-shadow:0 8px 20px rgba(0,0,0,0.1);
+            box-shadow:0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        button {
+            width:100%;
+            padding:12px;
+            margin-top:10px;
+            font-size:16px;
+            border:none;
+            border-radius:8px;
+            cursor:pointer;
+        }
+
+        .btn {
+            background:#007bff;
+            color:white;
+        }
+
+        .confirm {
+            background:#28a745;
+            color:white;
         }
 
         input {
@@ -29,121 +50,13 @@
             margin-top:10px;
             border:1px solid #ccc;
             border-radius:8px;
+            box-sizing:border-box;
         }
 
-        button {
-            margin-top:12px;
-            padding:10px;
-            width:100%;
-            border:none;
-            border-radius:8px;
-            cursor:pointer;
-            font-size:16px;
-        }
-
-        .primary {
-            background:#28a745;
-            color:white;
-        }
-
-        .secondary {
-            background:#007bff;
-            color:white;
-        }
-
-        .small {
-            font-size:13px;
+        #status {
+            margin-top:10px;
+            font-size:14px;
             color:gray;
-            margin-top:8px;
         }
     </style>
-</head>
-<body>
-
-<div class="card">
-
-    <h3>📍 Set Your Location</h3>
-
-    <p class="small">We will detect your location automatically</p>
-
-    <button class="secondary" onclick="detectLocation()">
-        Auto Detect Location
-    </button>
-
-    <p id="status"></p>
-
-    <input type="text" id="address" placeholder="Detected address will appear here">
-
-    <input type="text" id="lat" placeholder="Latitude" readonly>
-    <input type="text" id="lon" placeholder="Longitude" readonly>
-
-    <button class="primary" onclick="confirmLocation()">
-        Confirm Location
-    </button>
-
-</div>
-
-<script>
-
-let data = {
-    lat: "",
-    lon: "",
-    address: ""
-};
-
-function detectLocation() {
-
-    document.getElementById("status").innerText = "Detecting location...";
-
-    if (navigator.geolocation) {
-
-        navigator.geolocation.getCurrentPosition(
-            async (pos) => {
-
-                data.lat = pos.coords.latitude;
-                data.lon = pos.coords.longitude;
-
-                document.getElementById("lat").value = data.lat;
-                document.getElementById("lon").value = data.lon;
-
-                // Get readable address
-                try {
-                    let res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${data.lat}&lon=${data.lon}`);
-                    let json = await res.json();
-
-                    data.address = json.display_name;
-                    document.getElementById("address").value = data.address;
-
-                } catch (e) {
-                    document.getElementById("address").value = "Unable to fetch address";
-                }
-
-                document.getElementById("status").innerText = "Location detected ✅";
-
-            },
-            () => {
-                document.getElementById("status").innerText = "Location access denied ❌";
-            },
-            { enableHighAccuracy: true, timeout: 8000 }
-        );
-
-    } else {
-        document.getElementById("status").innerText = "GPS not supported";
-    }
-}
-
-function confirmLocation() {
-
-    alert(
-        "Location Confirmed!\n\n" +
-        "Lat: " + document.getElementById("lat").value + "\n" +
-        "Lon: " + document.getElementById("lon").value + "\n" +
-        "Address: " + document.getElementById("address").value
-    );
-
-}
-
-</script>
-
-</body>
-</html>
+</head
