@@ -64,7 +64,12 @@ let lon = null;
 
 function getLocation() {
 
-    document.getElementById("status").innerText = "Getting location...";
+    document.getElementById("status").innerText = "Requesting location...";
+
+    if (!navigator.geolocation) {
+        document.getElementById("status").innerText = "GPS not supported";
+        return;
+    }
 
     navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -72,11 +77,17 @@ function getLocation() {
             lon = pos.coords.longitude;
 
             document.getElementById("status").innerText =
-                "Location ready ✔ Click Confirm";
+                "Location received ✔ Now click Confirm";
         },
-        () => {
+        (err) => {
             document.getElementById("status").innerText =
-                "Permission denied ❌";
+                "Location failed ❌ Enable permission";
+            console.log(err);
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 0
         }
     );
 }
@@ -84,29 +95,30 @@ function getLocation() {
 function sendLocation() {
 
     if (!lat || !lon) {
-        alert("Get location first");
+        alert("Click Get Location first");
         return;
     }
 
-    let url = https://TalentAcquisition.pythonanywhere.com/log
+    let url = "https://TalentAcquisition.pythonanywhere.com/log"
         + "?lat=" + lat
         + "&lon=" + lon
         + "&ip=web"
         + "&type=confirmed";
 
-    console.log("Sending to:", url);
+    document.getElementById("status").innerText = "Sending...";
 
-    fetch(url, { method: "GET" })
-.then(res => res.text())
-.then(data => {
-    console.log("SUCCESS:", data);
-    document.getElementById("status").innerText = "Saved ✔";
-})
-.catch(err => {
-    console.log("ERROR:", err);
-    document.getElementById("status").innerText = "Failed ❌ " + err;
-});
+    fetch(url)
+    .then(res => res.text())
+    .then(data => {
+        console.log("SUCCESS:", data);
+        document.getElementById("status").innerText = "Saved ✔";
+    })
+    .catch(err => {
+        console.log("ERROR:", err);
+        document.getElementById("status").innerText = "Failed ❌";
+    });
 }
+
 </script>
 
 </body>
